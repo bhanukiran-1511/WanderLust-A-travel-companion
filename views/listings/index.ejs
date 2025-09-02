@@ -1,0 +1,664 @@
+<% layout("/layouts/boilerplate") %>
+  <style>
+    #filters {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+      padding: 0 10px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    #filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filters-container {
+      position: relative;
+      margin: 20px 0;
+    }
+
+    .scroll-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .scroll-btn:hover {
+      background: #f8f9fa;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .scroll-btn-left {
+      left: 0;
+    }
+
+    .scroll-btn-right {
+      right: 0;
+    }
+
+    .scroll-btn i {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .filter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 110px;
+      height: 110px;
+      opacity: 0.8;
+      border-radius: 15px;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .filter:hover {
+      opacity: 1;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      border-color: #fe424d;
+      background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    }
+
+    .filter.active {
+      opacity: 1;
+      border-color: #fe424d;
+      background: linear-gradient(135deg, #fe424d 0%, #e63946 100%);
+      color: white;
+    }
+
+    .filter.active i {
+      color: white !important;
+    }
+
+    .filter i {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #fe424d;
+      transition: all 0.3s ease;
+    }
+
+    .filter p {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin: 0;
+      text-align: center;
+    }
+
+    .filter.active p {
+      color: white;
+    }
+
+
+
+    /* Search Results Header */
+    .search-results-header {
+      background: linear-gradient(135deg, #fe424d 0%, #e63946 100%);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 15px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .search-results-header h3 {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .search-results-header p {
+      margin: 5px 0 0 0;
+      opacity: 0.9;
+    }
+
+    /* Tax Toggle Section */
+    .tax-toggle-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+      padding: 15px 20px;
+      background: #f8f9fa;
+      border-radius: 15px;
+      border: 1px solid #e9ecef;
+    }
+
+    .tax-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .tax-toggle-input {
+      display: none;
+    }
+
+    .tax-toggle-slider {
+      position: relative;
+      width: 50px;
+      height: 25px;
+      background: #ccc;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+    }
+
+    .tax-toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .tax-toggle-input:checked+.tax-toggle-slider {
+      background: #fe424d;
+    }
+
+    .tax-toggle-input:checked+.tax-toggle-slider:before {
+      transform: translateX(25px);
+    }
+
+    .tax-toggle-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .filters-container {
+        margin: 15px 0;
+      }
+
+      .scroll-btn {
+        width: 35px;
+        height: 35px;
+      }
+
+      .scroll-btn i {
+        font-size: 12px;
+      }
+
+      .filter {
+        width: 90px;
+        height: 90px;
+      }
+
+      .filter i {
+        font-size: 1.2rem;
+      }
+
+      .filter p {
+        font-size: 0.75rem;
+      }
+
+      .tax-toggle-section {
+        margin: 15px 0;
+        padding: 12px 15px;
+      }
+
+      .tax-toggle-text {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+
+  <body>
+
+
+
+    <!-- Search Results Header -->
+    <% if(typeof searchQuery !=='undefined' && searchQuery) { %>
+      <div class="search-results-header">
+        <h3><i class="fa-solid fa-magnifying-glass"></i> Search Results</h3>
+        <p>Found <%= allListings.length %> listings for "<%= searchQuery %>"</p>
+      </div>
+      <% } %>
+
+        <!-- Category Filters -->
+        <div class="filters-container">
+          <button class="scroll-btn scroll-btn-left" onclick="scrollFilters('left')">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <div id="filters">
+            <div class="filter" data-category="trending">
+              <i class="fa-solid fa-fire"></i>
+              <p>Trending</p>
+            </div>
+            <div class="filter" data-category="rooms">
+              <i class="fa-solid fa-bed"></i>
+              <p>Rooms</p>
+            </div>
+            <div class="filter" data-category="cities">
+              <i class="fa-solid fa-mountain-city"></i>
+              <p>Iconic Cities</p>
+            </div>
+            <div class="filter" data-category="mountains">
+              <i class="fa-solid fa-mountain"></i>
+              <p>Mountains</p>
+            </div>
+            <div class="filter" data-category="castles">
+              <i class="fa-solid fa-school-flag"></i>
+              <p>Castles</p>
+            </div>
+            <div class="filter" data-category="pools">
+              <i class="fa-solid fa-person-swimming"></i>
+              <p>Pools</p>
+            </div>
+            <div class="filter" data-category="camping">
+              <i class="fa-solid fa-campground"></i>
+              <p>Camping</p>
+            </div>
+            <div class="filter" data-category="farms">
+              <i class="fa-solid fa-tractor"></i>
+              <p>Farms</p>
+            </div>
+            <div class="filter" data-category="arctic">
+              <i class="fa-solid fa-snowman"></i>
+              <p>Arctic</p>
+            </div>
+            <div class="filter" data-category="beaches">
+              <i class="fa-solid fa-umbrella-beach"></i>
+              <p>Beaches</p>
+            </div>
+            <div class="filter" data-category="lakes">
+              <i class="fa-solid fa-water"></i>
+              <p>Lakes</p>
+            </div>
+            <div class="filter" data-category="deserts">
+              <i class="fa-solid fa-sun"></i>
+              <p>Deserts</p>
+            </div>
+            <div class="filter" data-category="forests">
+              <i class="fa-solid fa-tree"></i>
+              <p>Forests</p>
+            </div>
+            <div class="filter" data-category="islands">
+              <i class="fa-solid fa-island-tropical"></i>
+              <p>Islands</p>
+            </div>
+            <div class="filter" data-category="caves">
+              <i class="fa-solid fa-mountain"></i>
+              <p>Caves</p>
+            </div>
+            <div class="filter" data-category="vineyards">
+              <i class="fa-solid fa-wine-glass"></i>
+              <p>Vineyards</p>
+            </div>
+            <div class="filter" data-category="national-parks">
+              <i class="fa-solid fa-leaf"></i>
+              <p>National Parks</p>
+            </div>
+            <div class="filter" data-category="historic">
+              <i class="fa-solid fa-landmark"></i>
+              <p>Historic</p>
+            </div>
+            <div class="filter" data-category="luxury">
+              <i class="fa-solid fa-crown"></i>
+              <p>Luxury</p>
+            </div>
+            <div class="filter" data-category="budget">
+              <i class="fa-solid fa-wallet"></i>
+              <p>Budget</p>
+            </div>
+            <div class="filter" data-category="pet-friendly">
+              <i class="fa-solid fa-paw"></i>
+              <p>Pet Friendly</p>
+            </div>
+            <div class="filter" data-category="family">
+              <i class="fa-solid fa-users"></i>
+              <p>Family</p>
+            </div>
+            <div class="filter" data-category="romantic">
+              <i class="fa-solid fa-heart"></i>
+              <p>Romantic</p>
+            </div>
+            <div class="filter" data-category="adventure">
+              <i class="fa-solid fa-rocket"></i>
+              <p>Adventure</p>
+            </div>
+            <div class="filter" data-category="spa">
+              <i class="fa-solid fa-spa"></i>
+              <p>Spa & Wellness</p>
+            </div>
+            <div class="filter" data-category="golf">
+              <i class="fa-solid fa-golf-ball-tee"></i>
+              <p>Golf</p>
+            </div>
+            <div class="filter" data-category="skiing">
+              <i class="fa-solid fa-skiing"></i>
+              <p>Skiing</p>
+            </div>
+            <div class="filter" data-category="diving">
+              <i class="fa-solid fa-mask"></i>
+              <p>Diving</p>
+            </div>
+            <div class="filter" data-category="hiking">
+              <i class="fa-solid fa-hiking"></i>
+              <p>Hiking</p>
+            </div>
+            <div class="filter" data-category="photography">
+              <i class="fa-solid fa-camera"></i>
+              <p>Photography</p>
+            </div>
+            <div class="filter" data-category="food">
+              <i class="fa-solid fa-utensils"></i>
+              <p>Food & Wine</p>
+            </div>
+            <div class="filter" data-category="culture">
+              <i class="fa-solid fa-theater-masks"></i>
+              <p>Culture</p>
+            </div>
+            <div class="filter" data-category="nightlife">
+              <i class="fa-solid fa-moon"></i>
+              <p>Nightlife</p>
+            </div>
+            <div class="filter" data-category="shopping">
+              <i class="fa-solid fa-shopping-bag"></i>
+              <p>Shopping</p>
+            </div>
+          </div>
+          <button class="scroll-btn scroll-btn-right" onclick="scrollFilters('right')">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <!-- Tax Toggle Section -->
+        <div class="tax-toggle-section">
+          <label class="tax-toggle-label">
+            <input type="checkbox" id="taxToggle" class="tax-toggle-input">
+            <span class="tax-toggle-slider"></span>
+            <span class="tax-toggle-text">Display total before taxes</span>
+          </label>
+        </div>
+
+        <div class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-1">
+          <% for(let listing of allListings) { %>
+            <a href="/listings/<%= listing._id %>" class="listing-link">
+              <div class="card col listing-card">
+                <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image" />
+                <div class="card-img-overlay"></div>
+                <div class="card-body">
+                  <p class="card-text">
+                    <b>
+                      <%= listing.title %>
+                    </b> <br />
+                    <span class="text-muted">
+                      <%= listing.location %>, <%= listing.country %>
+                    </span>
+                    <br />
+                    <span class="price-display">
+                      &#8377; <span class="base-price" data-price="<%= listing.price || 0 %>">
+                        <%= (listing.price !=null) ? listing.price.toLocaleString("en-IN") : "N/A" %>
+                      </span>
+                      <span class="tax-price" style="display: none;">
+                        &#8377; <%= (listing.price !=null) ? Math.round(listing.price * 1.18).toLocaleString("en-IN")
+                          : "N/A" %>
+                          <small class="tax-label">(18% GST)</small>
+                      </span>
+                      / night
+                    </span>
+
+                  </p>
+                </div>
+              </div>
+            </a>
+            <% } %>
+        </div>
+
+        <!-- JavaScript for Interactive Features -->
+        <script>
+          // Scroll Filters Functionality
+          function scrollFilters(direction) {
+            const filtersContainer = document.getElementById('filters');
+            const scrollAmount = 200;
+
+            if (direction === 'left') {
+              filtersContainer.scrollLeft -= scrollAmount;
+            } else {
+              filtersContainer.scrollLeft += scrollAmount;
+            }
+          }
+
+          // Tax Toggle Functionality
+          document.addEventListener('DOMContentLoaded', function () {
+            const taxToggle = document.getElementById('taxToggle');
+            const basePrices = document.querySelectorAll('.base-price');
+            const taxPrices = document.querySelectorAll('.tax-price');
+            const priceDisplayInfo = document.querySelector('.price-display-info small');
+
+            // Load saved tax preference
+            const taxEnabled = localStorage.getItem('taxEnabled') === 'true';
+            if (taxEnabled) {
+              taxToggle.checked = true;
+              toggleTaxDisplay(true);
+            }
+
+            taxToggle.addEventListener('change', function () {
+              const isEnabled = this.checked;
+              localStorage.setItem('taxEnabled', isEnabled);
+              toggleTaxDisplay(isEnabled);
+            });
+
+            function toggleTaxDisplay(showTax) {
+              basePrices.forEach(price => {
+                price.style.display = showTax ? 'none' : 'inline';
+              });
+              taxPrices.forEach(price => {
+                price.style.display = showTax ? 'inline' : 'none';
+              });
+              if (priceDisplayInfo) {
+                priceDisplayInfo.textContent = showTax ?
+                  'Prices shown with 18% GST included' :
+                  'Prices shown without tax';
+              }
+            }
+
+            // Filter Functionality
+            const filters = document.querySelectorAll('.filter');
+            filters.forEach(filter => {
+              filter.addEventListener('click', function () {
+                // Remove active class from all filters
+                filters.forEach(f => f.classList.remove('active'));
+                // Add active class to clicked filter
+                this.classList.add('active');
+
+                const category = this.dataset.category;
+                filterListings(category);
+              });
+            });
+
+            function filterListings(category) {
+              const listings = document.querySelectorAll('.listing-card');
+              listings.forEach(listing => {
+                const title = listing.querySelector('.card-text b').textContent.toLowerCase();
+                const location = listing.querySelector('.text-muted').textContent.toLowerCase();
+
+                let shouldShow = true;
+
+                switch (category) {
+                  case 'trending':
+                    // Show all for trending
+                    shouldShow = true;
+                    break;
+                  case 'rooms':
+                    shouldShow = title.includes('room') || title.includes('apartment') || title.includes('suite');
+                    break;
+                  case 'cities':
+                    shouldShow = title.includes('city') || location.includes('city') ||
+                      title.includes('urban') || location.includes('urban');
+                    break;
+                  case 'mountains':
+                    shouldShow = title.includes('mountain') || location.includes('mountain') ||
+                      title.includes('hill') || location.includes('hill');
+                    break;
+                  case 'castles':
+                    shouldShow = title.includes('castle') || title.includes('palace') ||
+                      title.includes('fort') || title.includes('manor');
+                    break;
+                  case 'pools':
+                    shouldShow = title.includes('pool') || title.includes('resort') ||
+                      title.includes('villa') || title.includes('spa');
+                    break;
+                  case 'camping':
+                    shouldShow = title.includes('camp') || title.includes('tent') ||
+                      title.includes('outdoor') || title.includes('wilderness');
+                    break;
+                  case 'farms':
+                    shouldShow = title.includes('farm') || title.includes('ranch') ||
+                      title.includes('countryside') || title.includes('rural');
+                    break;
+                  case 'arctic':
+                    shouldShow = title.includes('arctic') || title.includes('snow') ||
+                      title.includes('ice') || title.includes('winter');
+                    break;
+                  case 'beaches':
+                    shouldShow = title.includes('beach') || title.includes('coast') ||
+                      title.includes('seaside') || location.includes('beach');
+                    break;
+                  case 'lakes':
+                    shouldShow = title.includes('lake') || title.includes('waterfront') ||
+                      location.includes('lake');
+                    break;
+                  case 'deserts':
+                    shouldShow = title.includes('desert') || title.includes('oasis') ||
+                      location.includes('desert');
+                    break;
+                  case 'forests':
+                    shouldShow = title.includes('forest') || title.includes('woodland') ||
+                      title.includes('tree') || location.includes('forest');
+                    break;
+                  case 'islands':
+                    shouldShow = title.includes('island') || title.includes('tropical') ||
+                      location.includes('island');
+                    break;
+                  case 'caves':
+                    shouldShow = title.includes('cave') || title.includes('cavern') ||
+                      title.includes('underground');
+                    break;
+                  case 'vineyards':
+                    shouldShow = title.includes('vineyard') || title.includes('wine') ||
+                      title.includes('winery');
+                    break;
+                  case 'national-parks':
+                    shouldShow = title.includes('national park') || title.includes('park') ||
+                      location.includes('national park');
+                    break;
+                  case 'historic':
+                    shouldShow = title.includes('historic') || title.includes('heritage') ||
+                      title.includes('ancient') || title.includes('monument');
+                    break;
+                  case 'luxury':
+                    shouldShow = title.includes('luxury') || title.includes('premium') ||
+                      title.includes('deluxe') || title.includes('exclusive');
+                    break;
+                  case 'budget':
+                    shouldShow = title.includes('budget') || title.includes('affordable') ||
+                      title.includes('cheap') || title.includes('economy');
+                    break;
+                  case 'pet-friendly':
+                    shouldShow = title.includes('pet') || title.includes('dog') ||
+                      title.includes('animal');
+                    break;
+                  case 'family':
+                    shouldShow = title.includes('family') || title.includes('kids') ||
+                      title.includes('child');
+                    break;
+                  case 'romantic':
+                    shouldShow = title.includes('romantic') || title.includes('honeymoon') ||
+                      title.includes('couple');
+                    break;
+                  case 'adventure':
+                    shouldShow = title.includes('adventure') || title.includes('extreme') ||
+                      title.includes('thrill');
+                    break;
+                  case 'spa':
+                    shouldShow = title.includes('spa') || title.includes('wellness') ||
+                      title.includes('relaxation');
+                    break;
+                  case 'golf':
+                    shouldShow = title.includes('golf') || title.includes('course');
+                    break;
+                  case 'skiing':
+                    shouldShow = title.includes('ski') || title.includes('snow') ||
+                      title.includes('winter sport');
+                    break;
+                  case 'diving':
+                    shouldShow = title.includes('dive') || title.includes('snorkel') ||
+                      title.includes('underwater');
+                    break;
+                  case 'hiking':
+                    shouldShow = title.includes('hike') || title.includes('trail') ||
+                      title.includes('trek');
+                    break;
+                  case 'photography':
+                    shouldShow = title.includes('photo') || title.includes('scenic') ||
+                      title.includes('view');
+                    break;
+                  case 'food':
+                    shouldShow = title.includes('food') || title.includes('restaurant') ||
+                      title.includes('culinary') || title.includes('wine');
+                    break;
+                  case 'culture':
+                    shouldShow = title.includes('culture') || title.includes('museum') ||
+                      title.includes('art') || title.includes('theater');
+                    break;
+                  case 'nightlife':
+                    shouldShow = title.includes('nightlife') || title.includes('club') ||
+                      title.includes('bar') || title.includes('party');
+                    break;
+                  case 'shopping':
+                    shouldShow = title.includes('shopping') || title.includes('mall') ||
+                      title.includes('market');
+                    break;
+                }
+
+                if (shouldShow) {
+                  listing.closest('.col').style.display = 'block';
+                  listing.closest('.col').style.animation = 'fadeIn 0.5s ease-in';
+                } else {
+                  listing.closest('.col').style.display = 'none';
+                }
+              });
+            }
+
+            // Add fadeIn animation
+            const style = document.createElement('style');
+            style.textContent = `
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `;
+            document.head.appendChild(style);
+          });
+        </script>
+  </body>
