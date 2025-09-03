@@ -19,6 +19,8 @@ if (process.env.NODE_ENV !== "production") require('dotenv').config();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+const dbUrl = process.env.ATLAS_DB_URL ;
+
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     crypto: {
@@ -70,7 +72,7 @@ const reviewRouter = require('./routes/review.js');
 const userRouter = require('./routes/user.js');
 
 const mongoose = require('mongoose');
-const dbUrl = process.env.ATLAS_DB_URL ;
+
 
 main().then(() => {
     console.log('Connected to MongoDB');
